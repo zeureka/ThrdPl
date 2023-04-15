@@ -12,7 +12,7 @@ g++ test.cpp ThrdPl.cpp -o test && ./test
 ```bash
 git clone https://github.com/zeureka/ThrdPl.gith
 ```
-将ThrdPl.c和ThrdPl.h放在您的项目中，或者生成一个只包含头的文件并将其放在项目中。
+将ThrdPl.cpp和ThrdPl.h放在您的项目中，或者生成一个只包含头的文件并将其放在项目中。
 
 ## API 
 | 函数                                             | 描述                                                                |

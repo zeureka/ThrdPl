@@ -1,4 +1,4 @@
-#include "threadPool.h"
+#include "ThrdPl.h"
 #include <iostream>
 #include <pthread.h>
 #include <unistd.h>
