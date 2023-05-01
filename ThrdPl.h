@@ -38,9 +38,9 @@ private:
 
 class ThreadPool {
 public:
-  ThreadPool(const int &minNum, const int &maxNum); // 构造函数
-  ~ThreadPool();                                    // 析构函数
-  void addTask(const Task &task);                   // 添加任务
+  ThreadPool(const int &minNum = 3, const int &maxNum = 10, const int& queueCapacity = 100); // 构造函数
+  ~ThreadPool();                    // 析构函数
+  void addTask(const Task &task);   // 添加任务
 
 private:
   static void *worker(void *arg); // 工作线程的任务函数
@@ -49,9 +49,11 @@ private:
 
 private:
   TaskQueue *_taskQ;          // 任务队列对象
+  int _queueCapacity;         // 队列容量
   pthread_mutex_t _mutexPool; // 锁整个线程池
   pthread_mutex_t _mutexBusy; // 锁忙的线程数
   pthread_cond_t _notEmpty;   // 任务队列不为空的条件变量
+  pthread_cond_t _notFull;    // 任务队列未满的条件变量
   pthread_cond_t _exeDestroy; // 调用析构函数后是否立马向下执行
   std::vector<pthread_t> _threads; // 线程数组
   pthread_t _admin;                // 管理者线程

@@ -41,7 +41,7 @@ Task TaskQueue::takeTask() {
 int TaskQueue::taskNumber() { return m_taskQ.size(); }
 /*************** threadPool.cpp ***************/
 
-ThreadPool::ThreadPool(const int &minNum, const int &maxNum) {
+ThreadPool::ThreadPool(const int &minNum, const int &maxNum, const int& queueCapacity) {
   do {
     // 实例化任务队列
     _taskQ = new TaskQueue;
@@ -57,6 +57,7 @@ ThreadPool::ThreadPool(const int &minNum, const int &maxNum) {
     }
 
     // 初始化数据成员
+    _queueCapacity = queueCapacity;
     _minNum = minNum;
     _maxNum = maxNum;
     _busyNum = 0;
@@ -68,6 +69,7 @@ ThreadPool::ThreadPool(const int &minNum, const int &maxNum) {
     if (pthread_mutex_init(&_mutexPool, NULL) != 0 ||
         pthread_mutex_init(&_mutexBusy, NULL) != 0 ||
         pthread_cond_init(&_exeDestroy, NULL) != 0 ||
+        pthread_cond_init(&_notFull, NULL) != 0 ||
         pthread_cond_init(&_notEmpty, NULL) != 0) {
       perror("init mutex or condition fail...");
       break;
@@ -131,9 +133,20 @@ ThreadPool::~ThreadPool() {
   pthread_mutex_destroy(&_mutexBusy);
   pthread_cond_destroy(&_exeDestroy);
   pthread_cond_destroy(&_notEmpty);
+  pthread_cond_destroy(&_notFull);
 }
 
 void ThreadPool::addTask(const Task &task) {
+  pthread_mutex_lock(&_mutexPool);
+#if THRPL_DEBUG
+    std::cout << "TaskQueue size: " << _taskQ->taskNumber() << std::endl;
+#endif
+  while (_taskQ->taskNumber() == _queueCapacity && !_shutdown) {
+      // 阻塞生产者
+      pthread_cond_wait(&_notFull, &_mutexPool);
+  }
+  pthread_mutex_unlock(&_mutexPool);
+
   if (_shutdown) {
     return;
   }
@@ -172,6 +185,9 @@ void *ThreadPool::worker(void *arg) {
 
     // 取出任务
     Task task = self->_taskQ->takeTask();
+
+    // 唤醒生产者
+    pthread_cond_signal(&self->_notFull);
     pthread_mutex_unlock(&self->_mutexPool);
 
     pthread_mutex_lock(&self->_mutexBusy);

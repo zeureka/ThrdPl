@@ -15,20 +15,18 @@ void taskFanc(void *arg) {
 int main(int argc, char *argv[]) {
 
   // 创建线程池
-  ThreadPool *pool = new ThreadPool(3, 10);
+  ThreadPool *pool = new ThreadPool(3, 10, 30);
   for (int i = 0; i < 100; ++i) {
     int *num = new int(i + 100);
     pool->addTask(Task(taskFanc, num));
   }
 
-  sleep(30);
+  sleep(30); // 方便观察线程的销毁
 
   for (int i = 0; i < 100; ++i) {
     int *num = new int(i + 100);
     pool->addTask(Task(taskFanc, num));
   }
-
-  // sleep(30);
 
   delete pool;
 
